@@ -1,3 +1,10 @@
+/*
+Bu script sahnedeki boş bir GameManager objesine eklenecek.
+1, 2, 3 tuşlarıyla farklı Ay bölgeleri arasında geçiş yapar, 
+T tuşuyla zamanı hızlandırarak Güneş ve Dünya'nın ufuk çizgisine göre hareketini ve iletişim kesintilerini simüle eder.
+*/
+
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
