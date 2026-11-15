@@ -1,5 +1,10 @@
 
 // (C tuşu ile Dış Kamera / Kokpit İçi Ufuk Görünümü Geçişi)
+/* 
+Oyunu başlattığında kamera uzay aracını dışarıdan takip eder 
+(Chase Offset ayarıyla mesafeyi değiştirebilirsin). 
+Klavyeden C tuşuna bastığında kamera doğrudan mekiğin ön camına/gözüne geçer ve ufuk çizgisini 1. şahıs olarak gösterir
+*/
 
 using UnityEngine;
 
