@@ -1,4 +1,4 @@
-# Canvas objesine eklenecek. Dikey hız 3m/s 'den hızlıysa veya eğim 15 derece'yi geçerse yazıyı kırmızıya çevirir
+//  Canvas objesine eklenecek. Dikey hız 3m/s 'den hızlıysa veya eğim 15 derece'yi geçerse yazıyı kırmızıya çevirir
 
 
 using UnityEngine;
