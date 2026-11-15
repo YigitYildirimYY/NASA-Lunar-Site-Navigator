@@ -1,3 +1,5 @@
+//  Uzay aracına (Lander) eklenecek. Roket denklemine göre yakıt azaldıkça araç hafifler ve ivmelenme artar
+
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
