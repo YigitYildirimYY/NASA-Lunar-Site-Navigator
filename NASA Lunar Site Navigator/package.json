@@ -1,0 +1,10 @@
+{
+  "name": "nasa-lunar-site-navigator",
+  "version": "1.0.0",
+  "description": "NASA Space Apps 2026 — Lunar South Pole Mission Planner, Ephemeris & 3D Landing Simulator",
+  "private": true,
+  "scripts": {
+    "build": "node build_production.js",
+    "start": "python server.py 8080"
+  }
+}

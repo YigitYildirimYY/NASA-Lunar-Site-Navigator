@@ -1,0 +1,132 @@
+{
+  "sites": [
+    {
+      "id": "shackleton_rim",
+      "name": "Shackleton Crater Rim (Artemis III Candidate)",
+      "program": "NASA Artemis III / LRO LOLA",
+      "region": "South Pole (89.54°S)",
+      "lat": -89.54,
+      "lon": 0.0,
+      "elev_m": 1820.0,
+      "slope_deg": 4.2,
+      "water_ice_potential": "CRITICAL (98%) — Adjacent permanently shadowed crater floor traps volatiles",
+      "description": "Illuminated crest on the rim of 21-km Shackleton Crater. Experiences near-continuous grazing sunlight (>84% of lunar year) while sitting <2 km from cold-trapped water ice."
+    },
+    {
+      "id": "connecting_ridge",
+      "name": "Connecting Ridge (Shackleton–de Gerlache)",
+      "program": "NASA Artemis III / Peak of Eternal Light",
+      "region": "South Pole (89.45°S)",
+      "lat": -89.45,
+      "lon": -137.0,
+      "elev_m": 2180.0,
+      "slope_deg": 3.6,
+      "water_ice_potential": "VERY HIGH (95%) — Flanked by Shackleton & de Gerlache PSRs",
+      "description": "One of the highest-illumination ridges on the Moon. Elevated topography provides extended solar power generation windows, though Earth sits near the local horizon due to libration."
+    },
+    {
+      "id": "malapert_massif",
+      "name": "Malapert Massif Summit (CLPS / Relay Peak)",
+      "program": "NASA CLPS / Intuitive Machines / Artemis",
+      "region": "South Polar Highlands (86.00°S)",
+      "lat": -86.0,
+      "lon": 0.0,
+      "elev_m": 5020.0,
+      "slope_deg": 6.1,
+      "water_ice_potential": "HIGH (82%) — Surrounded by low-lying cold traps",
+      "description": "5-km-tall mountain range along the 0° prime meridian facing Earth. Offers unobstructed Direct-to-Earth (DTE) line-of-sight and strong solar access."
+    },
+    {
+      "id": "mons_mouton",
+      "name": "Mons Mouton / Leibnitz Beta Plateau",
+      "program": "NASA CLPS (Griffin / VIPER Region)",
+      "region": "South Polar Plateau (84.60°S)",
+      "lat": -84.6,
+      "lon": -32.0,
+      "elev_m": 5380.0,
+      "slope_deg": 2.8,
+      "water_ice_potential": "HIGH (85%) — Shallow ice-bearing regolith nearby",
+      "description": "Broad, flat-topped 60-km mesa rising >5 km above surrounding terrain. Exceptional low-slope landing safety (<3°) combined with strong DTE communication visibility."
+    },
+    {
+      "id": "nobile_rim",
+      "name": "Nobile Crater Rim Peak (VIPER Rover Target)",
+      "program": "NASA CLPS / VIPER Volatiles Mission",
+      "region": "South Pole (85.30°S)",
+      "lat": -85.3,
+      "lon": 31.0,
+      "elev_m": 3380.0,
+      "slope_deg": 5.4,
+      "water_ice_potential": "VERY HIGH (92%) — Shallow subsurface ice stability zone",
+      "description": "Selected target for NASA's Volatiles Investigating Polar Exploration Rover (VIPER) to map surface and subsurface water ice across varying thermal environments."
+    },
+    {
+      "id": "de_gerlache_rim",
+      "name": "de Gerlache Crater Rim II (Artemis III Region)",
+      "program": "NASA Artemis III Candidate Region",
+      "region": "South Pole (88.30°S)",
+      "lat": -88.3,
+      "lon": -68.0,
+      "elev_m": 2450.0,
+      "slope_deg": 6.4,
+      "water_ice_potential": "VERY HIGH (94%) — Adjacent to de Gerlache permanent cold trap",
+      "description": "High illuminated massif on the rim of de Gerlache Crater. Balances strong polar sunlight (>78%) with periodic Direct-to-Earth communication windows."
+    },
+    {
+      "id": "shackleton_floor",
+      "name": "Shackleton Crater Floor (PSR Cold Trap — Hazard Demo)",
+      "program": "LRO LOLA Permanently Shadowed Region",
+      "region": "South Pole Interior (89.90°S)",
+      "lat": -89.9,
+      "lon": 0.0,
+      "elev_m": -4150.0,
+      "slope_deg": 18.4,
+      "water_ice_potential": "EXTREME (99.9%) — Exposed water-ice frost in permanent shadow",
+      "description": "4.2-km-deep interior floor of Shackleton Crater, just 10.9 km from the sunlit rim. Surrounded by >20° crater walls blocking both Sun and Earth year-round (0% solar, 0% DTE)."
+    },
+    {
+      "id": "chandrayaan_3",
+      "name": "Statio Shiv Shakti (Chandrayaan-3)",
+      "program": "ISRO Chandrayaan-3 / International Polar",
+      "region": "Southern Sub-Polar Highlands (69.37°S)",
+      "lat": -69.37,
+      "lon": 32.32,
+      "elev_m": 620.0,
+      "slope_deg": 3.9,
+      "water_ice_potential": "MODERATE (48%) — High-latitude regolith hydration",
+      "description": "Historic 2023 southernmost lunar landing site between Manzinus C and Simpelius N craters. Experiences ~14 Earth days of sunlight followed by ~14 days of lunar night."
+    },
+    {
+      "id": "apollo_11",
+      "name": "Mare Tranquillitatis (Apollo 11)",
+      "program": "NASA Apollo 11 Historic Baseline",
+      "region": "Equatorial Mare (0.67°N)",
+      "lat": 0.67,
+      "lon": 23.47,
+      "elev_m": -1890.0,
+      "slope_deg": 1.4,
+      "water_ice_potential": "LOW (5%) — Equatorial sunlit basaltic mare",
+      "description": "Flat equatorial basaltic plain. Demonstrates classic lunar diurnal cycle: Sun climbs to nearly 90° zenith at local noon, Earth stays permanently high (~66° elevation) in the sky."
+    },
+    {
+      "id": "apollo_17",
+      "name": "Taurus-Littrow Valley (Apollo 17)",
+      "program": "NASA Apollo 17 Deep Valley Benchmark",
+      "region": "Northern Highlands/Mare (20.19°N)",
+      "lat": 20.19,
+      "lon": 30.77,
+      "elev_m": -1450.0,
+      "slope_deg": 3.1,
+      "water_ice_potential": "LOW (12%) — Pyroclastic volcanic glass beads",
+      "description": "Deep graben valley flanked by 2-km-high North and South Massifs. Provides a dramatic comparison of local mountain horizon masking versus equatorial mare."
+    }
+  ],
+  "data_safety_audit": {
+    "max_allowed_file_mb": 50.0,
+    "de421_bsp_mb": 16.01,
+    "lola_south_pole_mb": 1.0,
+    "lola_global_mb": 4.95,
+    "ldem_16_tif_63mb_skipped": true,
+    "de421_spk_active": true
+  }
+}

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NASA Lunar Site Navigator — Space Apps 2026 Mission Planner & Landing Simulator</title>
+  <link rel="stylesheet" href="./static/styles.css" />
+  <script src="./static/vendor/three.min.js"></script>
+  <script src="./static/vendor/OrbitControls.js"></script>
+</head>
+<body>
+  <!-- Main 3D WebGL Viewport (Curved R=1737.4km Lunar Surface, OrbitControls & 1st-Person Cockpit) -->
+  <div id="webgl-container"></div>
+
+  <!-- 3D Projected Sky Reticle Labels for Sun, Earth & Hovering Spacecraft -->
+  <div id="sky-labels-layer">
+    <div id="sun-reticle" class="celestial-reticle sun-tag hidden">
+      <div class="reticle-ring"></div>
+      <div class="reticle-info">
+        <span class="r-title">☀️ SUN (GÜNEŞ)</span>
+        <span id="sun-reticle-coords">Az: 0.0° | El: 0.0°</span>
+      </div>
+    </div>
+    <div id="earth-reticle" class="celestial-reticle earth-tag hidden">
+      <div class="reticle-ring"></div>
+      <div class="reticle-info">
+        <span class="r-title">🌍 EARTH (DÜNYA - DTE)</span>
+        <span id="earth-reticle-coords">Az: 0.0° | El: 0.0°</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1st-Person Spacecraft Cockpit Frame Overlay (Active in Cockpit Mode) -->
+  <div id="cockpit-overlay" class="hidden">
+    <svg class="cockpit-svg" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+      <!-- Upper Canopy Struts -->
+      <path d="M0,0 L1920,0 L1920,85 L1580,50 L1340,16 L580,16 L340,50 L0,85 Z" fill="rgba(7,12,22,0.82)" stroke="rgba(56,189,248,0.35)" stroke-width="2"/>
+      <!-- Side Pillars -->
+      <path d="M0,85 L68,260 L40,860 L0,1080 Z" fill="rgba(7,12,22,0.72)" stroke="rgba(56,189,248,0.28)" stroke-width="1.5"/>
+      <path d="M1920,85 L1852,260 L1880,860 L1920,1080 Z" fill="rgba(7,12,22,0.72)" stroke="rgba(56,189,248,0.28)" stroke-width="1.5"/>
+      <!-- Center HUD Crosshair -->
+      <circle cx="960" cy="480" r="22" fill="none" stroke="rgba(56,189,248,0.35)" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <line x1="928" y1="480" x2="946" y2="480" stroke="rgba(56,189,248,0.45)" stroke-width="1.5"/>
+      <line x1="974" y1="480" x2="992" y2="480" stroke="rgba(56,189,248,0.45)" stroke-width="1.5"/>
+      <line x1="960" y1="448" x2="960" y2="466" stroke="rgba(56,189,248,0.45)" stroke-width="1.5"/>
+    </svg>
+
+    <!-- 360° Cockpit Compass & Quick-Look Bar -->
+    <div id="cockpit-compass-bar">
+      <div class="compass-readout">
+        <span class="compass-label">COCKPIT 360° BAKIŞ:</span>
+        <span id="cockpit-heading-val">000° N</span>
+        <span class="compass-sep">|</span>
+        <span class="compass-label">EĞİM:</span>
+        <span id="cockpit-pitch-val">+06°</span>
+      </div>
+      <div class="compass-actions">
+        <button class="hud-mini-btn" onclick="window.app.lookAtAzimuth(0, 6)">🧭 N (0°)</button>
+        <button class="hud-mini-btn" onclick="window.app.lookAtAzimuth(90, 6)">🧭 E (90°)</button>
+        <button class="hud-mini-btn" onclick="window.app.lookAtAzimuth(180, 6)">🧭 S (180°)</button>
+        <button class="hud-mini-btn" onclick="window.app.lookAtAzimuth(270, 6)">🧭 W (270°)</button>
+        <button class="hud-mini-btn sun-btn" onclick="window.app.trackCelestial('sun')">☀️ Güneş'e Bak</button>
+        <button class="hud-mini-btn earth-btn" onclick="window.app.trackCelestial('earth')">🌍 Dünya'ya Bak</button>
+        <button class="hud-mini-btn" onclick="window.app.setCameraMode('orbital')">🛰️ 3D Dış Kameraya Dön</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Telemetry & Mode Bar -->
+  <header id="top-bar">
+    <div class="brand-block">
+      <div class="nasa-badge">NASA SPACE APPS 2026</div>
+      <div>
+        <h1>LUNAR SITE NAVIGATOR <span class="sub-accent">// CLPS &amp; ARTEMIS SİMÜLATÖRÜ</span></h1>
+        <p id="data-audit-line">JPL DE421 SPK (de421.bsp) + LRO LOLA DEM (.npy &amp; BumpMap) • &lt;50MB Veri Koruması Aktif</p>
+      </div>
+    </div>
+
+    <div class="mode-controls">
+      <div class="btn-group" role="group" aria-label="Camera Mode">
+        <button id="btn-mode-orbital" class="mode-btn active" onclick="window.app.setCameraMode('orbital')" title="360° Serbest OrbitControls İnceleme Modu">
+          🛰️ 360° Serbest Kamera (Orbit)
+        </button>
+        <button id="btn-mode-cockpit" class="mode-btn" onclick="window.app.setCameraMode('cockpit')" title="Mekiğin Gözünden 1. Şahıs Kokpit Görünümü">
+          👨‍🚀 Kokpit (1st-Person)
+        </button>
+        <button class="mode-btn" onclick="window.app.resetOrbitCamera()" title="Kamerayı Uzay Aracına Odakla">
+          🎯 Araca Odakla
+        </button>
+      </div>
+
+      <button id="btn-heatmap-toggle" class="mode-btn" onclick="window.app.toggleSlopeHeatmap()" title="Eğim Güvenlik Haritası (<15° Yeşil / >15° Kırmızı)">
+        🌑 Saf Ay Regoliti (#7a7a7a)
+      </button>
+
+      <button id="btn-open-compare" class="compare-cta-btn" onclick="window.app.toggleCompareModal()">
+        ⚖️ Senaryo Kıyasla (A vs B)
+      </button>
+
+      <button id="btn-zen-ui" class="mode-btn zen-btn" onclick="window.app.toggleAllPanels()" title="Panelleri Daralt / Genişlet (Veri Kaybı Olmadan Ferah Görünüm)">
+        📐 Panelleri Daralt
+      </button>
+    </div>
+  </header>
+
+  <!-- Floating Drawer Toggle Buttons (Visible when side panels are collapsed) -->
+  <button id="btn-expand-left" class="drawer-restore-btn left-restore hidden" onclick="window.app.togglePanel('left')">
+    ▶ Görev &amp; İniş Panelini Aç
+  </button>
+  <button id="btn-expand-right" class="drawer-restore-btn right-restore hidden" onclick="window.app.togglePanel('right')">
+    ◀ Telemetri &amp; Ufuk Panelini Aç
+  </button>
+
+  <!-- Critical Operational Alert Banner (Sunset / DTE Loss Warnings) -->
+  <div id="alert-stack">
+    <div id="alert-sun" class="cockpit-alert alert-danger hidden">
+      <span class="alert-icon">⚠️</span>
+      <div>
+        <strong>GÜNEŞ BATTI / UFUK ÇİZGİSİNİN ALTINDA (SUNSET — SOLAR OCCLUSION)</strong>
+        <div id="alert-sun-detail">Güneş yerel krater/dağ ufkunun altında. Solar panel üretimi %0 — Batarya koruma modu aktif.</div>
+      </div>
+    </div>
+    <div id="alert-earth" class="cockpit-alert alert-warning hidden">
+      <span class="alert-icon">📡</span>
+      <div>
+        <strong>DÜNYA İLETİŞİMİ (DTE) KESİLDİ (DIRECT-TO-EARTH LOS BLOCKED)</strong>
+        <div id="alert-earth-detail">Dünya yerel arazi ufkunun altında. Doğrudan iletişim yok — Lunar Relay uydusu gerekli.</div>
+      </div>
+    </div>
+    <div id="alert-touchdown" class="cockpit-alert alert-success hidden">
+      <span class="alert-icon">🚀</span>
+      <div>
+        <strong id="touchdown-title">İNİŞ TAMAMLANDI — KOKPİT (1. ŞAHIS) GÖRÜNÜMÜ AKTİF</strong>
+        <div id="touchdown-detail">Fare ile 360° ufuk çizgisini döndürebilir, alt zaman çubuğundan Güneş ve Dünya hareketini izleyebilirsiniz.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top-Right 3D Orbital Minimap (Rotating Moon Globe with Target Pin) -->
+  <aside id="orbital-minimap-card">
+    <div class="minimap-header">
+      <span class="minimap-title">🌕 3D ORBITAL MİNİ-AY</span>
+      <span id="minimap-region-tag" class="minimap-tag">South Pole</span>
+    </div>
+    <div id="minimap-canvas-wrap">
+      <canvas id="minimap-canvas" width="170" height="170"></canvas>
+    </div>
+    <div class="minimap-footer">
+      <div id="minimap-coords">Lat: -89.54° | Lon: 0.00°</div>
+      <div class="minimap-sub">R = 1,737.4 km • Küresel Eğrilik</div>
+    </div>
+  </aside>
+
+  <!-- Left Panel: Collapsible Accordion Groups for Clean & Spacious UI -->
+  <aside id="left-panel" class="glass-panel">
+    <div class="panel-top-bar">
+      <span class="panel-main-title">🧭 GÖREV &amp; NAVİGASYON KONTROLÜ</span>
+      <button class="panel-collapse-btn" onclick="window.app.togglePanel('left')" title="Sol Paneli Gizle">◀ Gizle</button>
+    </div>
+
+    <!-- Accordion 1: Landing Site & Descent CTA (Always prominent) -->
+    <details class="hud-accordion" open>
+      <summary class="accordion-header">
+        <span>1. İNİŞ BÖLGESİ SEÇİMİ &amp; İNİŞ</span>
+        <span id="slope-safety-badge" class="safety-badge safe">SAFE (&lt;15°)</span>
+      </summary>
+      <div class="accordion-body">
+        <label for="site-select" class="field-label">NASA / CLPS / Uluslararası Hedefler:</label>
+        <select id="site-select" class="hud-select" onchange="window.app.onSelectCuratedSite(this.value)"></select>
+        <p id="site-description" class="site-desc"></p>
+        <div class="ice-box">
+          <span class="ice-label">💧 Su Buzu / Kaynak Potansiyeli:</span>
+          <span id="site-ice-val">CRITICAL (98%)</span>
+        </div>
+
+        <div class="target-telemetry-grid" style="margin-top:8px;">
+          <div class="t-cell">
+            <span class="t-label">LRO LOLA Rakım</span>
+            <strong id="val-elevation">+1,820 m</strong>
+          </div>
+          <div class="t-cell">
+            <span class="t-label">Yerel Arazi Eğimi</span>
+            <strong id="val-slope">4.2°</strong>
+          </div>
+        </div>
+
+        <div class="lander-flight-status">
+          <span class="status-dot"></span>
+          <span id="lander-state-text">🛰️ DURUM: HAVADA SÜZÜLÜYOR (İRTİFA: 1,200 m)</span>
+        </div>
+
+        <button id="btn-land-spacecraft" class="primary-land-btn" onclick="window.app.startLandingSequence()">
+          🚀 SEÇİLEN HEDEF NOKTAYA İNİŞİ BAŞLAT
+        </button>
+        <p class="click-hint">
+          🎯 <strong>İniş Noktası Seçimi (Raycasting):</strong> 3D Ay yüzeyi üzerinde istediğiniz herhangi bir noktaya <strong>sol tıklayarak</strong> parlak hedef halkasını taşıyın; araç seçtiğiniz o noktaya inecektir.
+        </p>
+      </div>
+    </details>
+
+    <!-- Accordion 2: Custom Coordinates & Epoch -->
+    <details class="hud-accordion" open>
+      <summary class="accordion-header">
+        <span>2. ÖZEL KOORDİNAT &amp; TARİH GİRİŞİ</span>
+        <span class="badge-pill">JPL DE421</span>
+      </summary>
+      <div class="accordion-body">
+        <div class="coord-grid">
+          <div>
+            <label for="input-lat" class="field-label">Enlem (°N / -°S)</label>
+            <input id="input-lat" type="number" step="0.05" min="-90" max="90" value="-89.54" class="hud-input" />
+          </div>
+          <div>
+            <label for="input-lon" class="field-label">Boylam (°E / -°W)</label>
+            <input id="input-lon" type="number" step="0.05" min="-180" max="180" value="0.00" class="hud-input" />
+          </div>
+        </div>
+        <div class="date-row">
+          <label for="input-date" class="field-label">İniş Tarihi ve Saati (UTC)</label>
+          <input id="input-date" type="datetime-local" value="2026-11-15T12:00" class="hud-input" />
+        </div>
+        <button class="secondary-action-btn" onclick="window.app.evaluateCustomInputs()">
+          🔍 Koordinat ve Tarihi Hesapla
+        </button>
+      </div>
+    </details>
+  </aside>
+
+  <!-- Right Panel: Collapsible Telemetry & 360° Horizon Visualization -->
+  <aside id="right-panel" class="glass-panel">
+    <div class="panel-top-bar">
+      <span class="panel-main-title">📊 BİLİMSEL TELEMETRİ &amp; UFUK ANALİZİ</span>
+      <button class="panel-collapse-btn" onclick="window.app.togglePanel('right')" title="Sağ Paneli Gizle">Gizle ▶</button>
+    </div>
+
+    <details class="hud-accordion" open>
+      <summary class="accordion-header">
+        <span>GÜNEŞ ENERJİSİ &amp; AYDINLANMA</span>
+        <span id="sun-status-pill" class="status-pill online">☀️ SUNLIT</span>
+      </summary>
+      <div class="accordion-body">
+        <div class="metric-row-main">
+          <div class="metric-big">
+            <span class="m-label">Güneşlenme Oranı (29.5g)</span>
+            <strong id="metric-sunlight-pct" class="m-value gold">100.0%</strong>
+          </div>
+          <div class="metric-big">
+            <span class="m-label">Anlık Solar Güç</span>
+            <strong id="metric-power-pct" class="m-value emerald">74.3%</strong>
+          </div>
+        </div>
+        <div class="sub-metrics-grid">
+          <div>
+            <span>Güneş Yüksekliği:</span>
+            <strong id="metric-sun-el">+1.39°</strong>
+          </div>
+          <div>
+            <span>Yerel Ufuk Açısı:</span>
+            <strong id="metric-sun-hor">-0.35°</strong>
+          </div>
+          <div>
+            <span>Güneş Azimut:</span>
+            <strong id="metric-sun-az">108.5°</strong>
+          </div>
+          <div>
+            <span id="label-sun-countdown">Gün Batımına Kalan:</span>
+            <strong id="metric-sun-countdown" class="highlight-time">&gt;708s</strong>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="hud-accordion" open>
+      <summary class="accordion-header">
+        <span>DOĞRUDAN DÜNYA İLETİŞİMİ (DTE)</span>
+        <span id="dte-status-pill" class="status-pill online">📡 DTE ACTIVE</span>
+      </summary>
+      <div class="accordion-body">
+        <div class="metric-row-main">
+          <div class="metric-big">
+            <span class="m-label">DTE İletişim Penceresi</span>
+            <strong id="metric-dte-pct" class="m-value cyan">49.6%</strong>
+          </div>
+          <div class="metric-big">
+            <span class="m-label">Görev Uygunluk Skoru</span>
+            <strong id="metric-feasibility" class="m-value">80.1 / 100</strong>
+          </div>
+        </div>
+        <div class="sub-metrics-grid">
+          <div>
+            <span>Dünya Yüksekliği:</span>
+            <strong id="metric-earth-el">+1.85°</strong>
+          </div>
+          <div>
+            <span>Yerel Ufuk Açısı:</span>
+            <strong id="metric-earth-hor">-0.35°</strong>
+          </div>
+          <div>
+            <span>Optik Librasyon:</span>
+            <strong id="metric-libration">-3.3°, +2.5°</strong>
+          </div>
+          <div>
+            <span id="label-earth-countdown">Dünya Batımına:</span>
+            <strong id="metric-earth-countdown" class="highlight-time">36 saat</strong>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="hud-accordion" open>
+      <summary class="accordion-header">
+        <span>360° LRO LOLA UFUK &amp; GÖKYÜZÜ GRAFİĞİ</span>
+        <span class="badge-pill">ATMOSFERSİZ</span>
+      </summary>
+      <div class="accordion-body">
+        <canvas id="horizon-canvas" width="320" height="130"></canvas>
+        <div class="horizon-legend">
+          <span><i class="dot sun-dot"></i> Güneş</span>
+          <span><i class="dot earth-dot"></i> Dünya (DTE)</span>
+          <span><i class="dot terrain-dot"></i> LOLA Ufuk Maskesi</span>
+        </div>
+      </div>
+    </details>
+
+    <!-- Jury Presentation Data Provenance & LRO LOLA Statistical Crater Model Card -->
+    <details class="hud-accordion" open>
+      <summary class="accordion-header">
+        <span>🛰️ NASA LRO LOLA MODELİ (JÜRİ BİLGİ PANELİ)</span>
+        <span class="badge-pill">PROSEDÜREL 3D</span>
+      </summary>
+      <div class="accordion-body">
+        <div class="sub-metrics-grid" style="font-size:10px; line-height:1.45;">
+          <div style="grid-column: 1 / -1;">
+            <span>Krater &amp; Regolit Morfolojisi:</span>
+            <strong>NASA LRO LOLA İstatistiksel Krater Modeli (teraslı iç duvarlar, yükseltilmiş krater dudağı/rim, ejekta örtüsü) + 6-oktavlı fraktal gürültü + prosedürel Canvas Bump/Roughness kum dokusu ile simüle edilmiştir.</strong>
+          </div>
+          <div>
+            <span>Yüzey Detayları:</span>
+            <strong id="metric-patch-minmax">18 Ana + 220 Mikro Krater + 75 Kaya (InstancedMesh)</strong>
+          </div>
+          <div>
+            <span>Yörünge Efemeris:</span>
+            <strong>JPL DE421 (de421.bsp)</strong>
+          </div>
+        </div>
+      </div>
+    </details>
+  </aside>
+
+  <!-- Bottom Timeline Scrubber Bar (708 Hours = 1 Full Lunar Synodic Day) -->
+  <footer id="bottom-timeline-bar" class="glass-panel">
+    <div class="timeline-top-row">
+      <div class="playback-controls">
+        <button id="btn-play-timeline" class="play-btn" onclick="window.app.toggleTimelinePlayback()">
+          ▶ Döngüyü Oynat
+        </button>
+        <button class="step-btn" onclick="window.app.stepTimeline(-1)" title="6 Saat Geri">-6s</button>
+        <button class="step-btn" onclick="window.app.stepTimeline(1)" title="6 Saat İleri">+6s</button>
+        <select id="select-speed" class="speed-select" onchange="window.app.setPlaybackSpeed(this.value)">
+          <option value="1">1x Hız</option>
+          <option value="3" selected>3x Hız</option>
+          <option value="8">8x Hız</option>
+        </select>
+      </div>
+
+      <div class="timeline-epoch-display">
+        <span class="epoch-tag">SİMÜLASYON ZAMANI (UTC):</span>
+        <strong id="timeline-utc-label">2026-11-15 12:00 UTC</strong>
+        <span class="epoch-offset" id="timeline-offset-label">(T + 0 saat / 29.5 Günlük Ay Döngüsü)</span>
+      </div>
+
+      <div class="timeline-window-legend">
+        <span class="w-pill sun-bar-pill">☀️ Güneşlenme Penceresi</span>
+        <span class="w-pill dte-bar-pill">📡 DTE İletişim Penceresi</span>
+      </div>
+    </div>
+
+    <div class="scrubber-container">
+      <input
+        id="timeline-slider"
+        type="range"
+        min="0"
+        max="118"
+        step="1"
+        value="0"
+        oninput="window.app.onScrubTimeline(this.value)"
+      />
+      <div class="availability-strips">
+        <div id="strip-sunlight" class="strip-row" title="708 Saatlik Güneşlenme Penceresi"></div>
+        <div id="strip-dte" class="strip-row" title="708 Saatlik Doğrudan Dünya İletişim Penceresi"></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================================== -->
+  <!-- 2D LUNAR LANDER MINI-GAME MODAL (Opens on "İnişi Başlat")                -->
+  <!-- ======================================================================== -->
+  <div id="lander-minigame-modal" class="modal-backdrop hidden">
+    <div class="minigame-card glass-panel">
+      <div class="minigame-header">
+        <div>
+          <span class="nasa-badge">TERMINAL DESCENT SIMULATOR</span>
+          <h2>🕹️ LUNAR LANDER: SON YAKLAŞMA VE İNİŞ KONTROLÜ</h2>
+          <p>Yön tuşları (<strong>↑ / W / Space</strong>: Ana İtici, <strong>← → / A D</strong>: Yan İticiler) ile aracı yeşil hedef platformuna veya Ay yüzeyine indirin!</p>
+        </div>
+        <div class="minigame-header-btns">
+          <button class="skip-minigame-btn" onclick="window.app.completeMiniGameTouchdown(true)">
+            ⚡ Hızlı İniş (Otomatik İndir)
+          </button>
+          <button class="close-modal-btn" onclick="window.app.cancelMiniGame()">✕ İptal</button>
+        </div>
+      </div>
+
+      <div class="minigame-canvas-wrap">
+        <canvas id="minigame-canvas" width="720" height="390"></canvas>
+
+        <!-- On-Screen Touch / Mouse Controls for convenience -->
+        <div class="minigame-touch-controls">
+          <button
+            class="mg-ctrl-btn"
+            onmousedown="window.app.setMiniGameKey('left', true)"
+            onmouseup="window.app.setMiniGameKey('left', false)"
+            ontouchstart="window.app.setMiniGameKey('left', true)"
+            ontouchend="window.app.setMiniGameKey('left', false)"
+          >⬅️ Sol İtici (A / ←)</button>
+          <button
+            class="mg-ctrl-btn thrust-main-btn"
+            onmousedown="window.app.setMiniGameKey('up', true)"
+            onmouseup="window.app.setMiniGameKey('up', false)"
+            ontouchstart="window.app.setMiniGameKey('up', true)"
+            ontouchend="window.app.setMiniGameKey('up', false)"
+          >🔥 ANA İTİCİ ATEŞLE (W / ↑ / SPACE)</button>
+          <button
+            class="mg-ctrl-btn"
+            onmousedown="window.app.setMiniGameKey('right', true)"
+            onmouseup="window.app.setMiniGameKey('right', false)"
+            ontouchstart="window.app.setMiniGameKey('right', true)"
+            ontouchend="window.app.setMiniGameKey('right', false)"
+          >Sağ İtici (D / →) ➡️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scenario Comparison Modal (Compare Scenarios A vs B) -->
+  <div id="compare-modal" class="modal-backdrop hidden">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <div>
+          <h2>⚖️ HIZLI SENARYO KIYASLAMA (SCENARIO A vs SCENARIO B)</h2>
+          <p>Farklı iniş bölgelerinin veya fırlatma/iniş tarihi değişikliklerinin güneş enerjisi ve DTE iletişim pencerelerine etkisini yan yana karşılaştırın.</p>
+        </div>
+        <button class="close-modal-btn" onclick="window.app.toggleCompareModal()">✕ Kapat</button>
+      </div>
+
+      <div class="compare-selectors-grid">
+        <div class="scenario-config-box scenario-a-box">
+          <h3>SENARYO A (ANA HEDEF)</h3>
+          <div class="sc-row">
+            <label>İniş Bölgesi A:</label>
+            <select id="compare-site-a" class="hud-select" onchange="window.app.runComparison()"></select>
+          </div>
+          <div class="sc-row">
+            <label>Tarih / Saat A (UTC):</label>
+            <input id="compare-date-a" type="datetime-local" value="2026-11-15T12:00" class="hud-input" onchange="window.app.runComparison()" />
+          </div>
+        </div>
+
+        <div class="scenario-config-box scenario-b-box">
+          <h3>SENARYO B (ALTERNATİF BÖLGE VEYA ERTELEME TARİHİ)</h3>
+          <div class="sc-row">
+            <label>İniş Bölgesi B:</label>
+            <select id="compare-site-b" class="hud-select" onchange="window.app.runComparison()"></select>
+          </div>
+          <div class="sc-row">
+            <label>Tarih / Saat B (UTC):</label>
+            <input id="compare-date-b" type="datetime-local" value="2026-11-29T12:00" class="hud-input" onchange="window.app.runComparison()" />
+          </div>
+        </div>
+      </div>
+
+      <div id="compare-results-container" class="compare-table-wrap"></div>
+    </div>
+  </div>
+
+  <script src="./static/app.js"></script>
+</body>
+</html>

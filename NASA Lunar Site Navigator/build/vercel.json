@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/sites",
+      "destination": "/api/sites.json"
+    }
+  ]
+}
