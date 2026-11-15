@@ -1,5 +1,5 @@
 
-# (C tuşu ile Dış Kamera / Kokpit İçi Ufuk Görünümü Geçişi)
+// (C tuşu ile Dış Kamera / Kokpit İçi Ufuk Görünümü Geçişi)
 
 using UnityEngine;
 
